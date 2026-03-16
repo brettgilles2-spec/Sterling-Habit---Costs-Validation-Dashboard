@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sterling Habit — Full Cost Dashboard</title>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --bg2: #141414;
+    --bg3: #1a1a1a;
+    --border: #2a2a2a;
+    --border2: #333;
+    --text: #e8e6df;
+    --text2: #b0afa8;
+    --text3: #7a7a6e;
+    --text4: #4a4a44;
+    --gold: #c9a96e;
+    --gold2: #ef9f27;
+    --blue: #378add;
+    --teal: #1d9e75;
+    --purple: #7f77dd;
+    --coral: #d85a30;
+    --green: #639922;
+    --amber: #ba7517;
+    --info-bg: rgba(55,138,221,0.12);
+    --warn-bg: rgba(201,169,110,0.12);
+    --success-bg: rgba(29,158,117,0.12);
+    --danger-bg: rgba(216,90,48,0.12);
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* NAV */
+  .sidenav {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 220px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+  .sidenav-brand {
+    padding: 0 20px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .sidenav-brand .name { font-size: 13px; font-weight: 700; color: var(--gold); letter-spacing: .1em; font-family: 'Georgia', serif; }
+  .sidenav-brand .sub { font-size: 10px; color: var(--text3); margin-top: 2px; font-family: 'Georgia', serif; }
+  .sidenav-brand .cap { font-size: 11px; color: var(--gold2); margin-top: 6px; font-family: 'Georgia', serif; }
+  .nav-section { font-size: 9px; color: var(--text4); letter-spacing: .1em; text-transform: uppercase; padding: 8px 20px 4px; }
+  .nav-item {
+    display: block; padding: 8px 20px; font-size: 12px; color: var(--text2);
+    text-decoration: none; cursor: pointer; transition: all .15s;
+    border-left: 2px solid transparent; font-family: 'Georgia', serif;
+  }
+  .nav-item:hover { color: var(--text); background: var(--bg3); }
+  .nav-item.active { color: var(--gold); border-left-color: var(--gold); background: rgba(201,169,110,0.06); }
+  .nav-item .nav-num { font-size: 9px; color: var(--text4); margin-right: 4px; }
+  .nav-item .nav-amt { font-size: 10px; color: var(--text3); float: right; }
+
+  /* MAIN */
+  .main { margin-left: 220px; padding: 40px; min-height: 100vh; }
+
+  /* SECTION */
+  .section { margin-bottom: 60px; scroll-margin-top: 40px; }
+  .section-header {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 24px; padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .section-title { font-size: 22px; font-weight: 400; color: var(--text); font-family: 'Georgia', serif; }
+  .section-badge {
+    font-size: 11px; padding: 3px 10px; border-radius: 20px;
+    font-family: 'Georgia', serif;
+  }
+  .badge-pre { background: var(--info-bg); color: var(--blue); border: 0.5px solid rgba(55,138,221,0.3); }
+  .badge-sale { background: var(--warn-bg); color: var(--gold); border: 0.5px solid rgba(201,169,110,0.3); }
+  .badge-post { background: var(--success-bg); color: var(--teal); border: 0.5px solid rgba(29,158,117,0.3); }
+  .section-amount { font-size: 18px; font-weight: 400; color: var(--gold); margin-left: auto; font-family: 'Georgia', serif; }
+
+  /* HERO INTRO */
+  .hero-bar {
+    display: grid; grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: 10px; margin-bottom: 24px;
+  }
+  .hc {
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: var(--radius); padding: 12px 14px;
+  }
+  .hc-label { font-size: 10px; color: var(--text4); letter-spacing: .05em; text-transform: uppercase; font-family: 'Georgia', serif; }
+  .hc-val { font-size: 18px; font-weight: 400; color: var(--text); margin-top: 4px; font-family: 'Georgia', serif; }
+  .hc-sub { font-size: 11px; color: var(--text3); margin-top: 2px; font-family: 'Georgia', serif; }
+
+  /* INNER TABS */
+  .inner-tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+  .itab {
+    padding: 5px 14px; border-radius: 20px; font-size: 12px;
+    cursor: pointer; border: 0.5px solid var(--border);
+    background: var(--bg2); color: var(--text3);
+    transition: all .15s; font-family: 'Georgia', serif;
+  }
+  .itab:hover { color: var(--text); border-color: var(--border2); }
+  .itab.on { background: var(--bg3); color: var(--text); border-color: var(--border2); }
+
+  /* TABLES */
+  .cost-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px; }
+  .cost-table thead tr { border-bottom: 1px solid var(--border); }
+  .cost-table th {
+    font-size: 10px; color: var(--text4); letter-spacing: .06em;
+    text-transform: uppercase; padding: 8px 10px; text-align: left;
+    font-family: 'Georgia', serif; font-weight: 400;
+  }
+  .cost-table th.r { text-align: right; }
+  .cost-table td { padding: 8px 10px; border-bottom: 0.5px solid var(--border); color: var(--text2); vertical-align: top; line-height: 1.5; font-family: 'Georgia', serif; }
+  .cost-table tr:last-child td { border-bottom: none; }
+  .cost-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .task-cell { color: var(--text) !important; font-weight: 400; }
+  .note-cell { color: var(--text4) !important; font-size: 11px; }
+  .cost-cell { text-align: right; font-weight: 400; white-space: nowrap; color: var(--text) !important; }
+  .cost-cell.hi { color: var(--coral) !important; }
+  .cost-cell.med { color: var(--gold2) !important; }
+  .cost-cell.lo { color: var(--teal) !important; }
+  .cat-header-row td { background: var(--bg3) !important; color: var(--text3) !important; font-size: 11px; letter-spacing: .04em; padding: 6px 10px; border-bottom: 0.5px solid var(--border); }
+  .total-line td { border-top: 1px solid var(--border2) !important; font-weight: 400; color: var(--text) !important; padding-top: 10px; }
+
+  /* BADGES */
+  .tbadge { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 10px; font-family: 'Georgia', serif; }
+  .tbadge.once { background: rgba(55,138,221,0.15); color: var(--blue); }
+  .tbadge.monthly { background: rgba(201,169,110,0.15); color: var(--gold); }
+  .tbadge.perunit { background: rgba(29,158,117,0.15); color: var(--teal); }
+  .tbadge.pct { background: rgba(216,90,48,0.15); color: var(--coral); }
+  .tbadge.weekly { background: rgba(239,159,39,0.15); color: var(--gold2); }
+  .tbadge.quarterly { background: rgba(127,119,221,0.15); color: var(--purple); }
+  .tbadge.stage { background: rgba(99,153,34,0.15); color: var(--green); }
+
+  /* TOTALS */
+  .totals-row { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin-top: 16px; }
+  .tot-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+  .tot-label { font-size: 10px; color: var(--text4); letter-spacing: .05em; text-transform: uppercase; font-family: 'Georgia', serif; }
+  .tot-val { font-size: 16px; font-weight: 400; color: var(--text); margin-top: 4px; font-family: 'Georgia', serif; }
+  .tot-sub { font-size: 11px; color: var(--text3); margin-top: 2px; font-family: 'Georgia', serif; }
+
+  /* NOTE BOX */
+  .note-box {
+    font-size: 12px; color: var(--text2);
+    padding: 10px 14px; background: var(--bg2);
+    border-radius: var(--radius); margin-bottom: 16px;
+    line-height: 1.6; border-left: 2px solid var(--border2);
+    font-family: 'Georgia', serif;
+  }
+
+  /* PANEL VISIBILITY */
+  .panel { display: none; }
+  .panel.on { display: block; }
+
+  /* ── WIDGET 1: PROCESS MAP ── */
+  .stage-grid { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 8px; margin-bottom: 16px; }
+  .stage-card {
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg); padding: 10px 10px 8px;
+    cursor: pointer; transition: border-color .15s;
+  }
+  .stage-card:hover { border-color: var(--border2); }
+  .stage-card.active-pre { border: 1.5px solid var(--blue); background: var(--bg3); }
+  .stage-card.active-sale { border: 1.5px solid var(--gold); background: var(--bg3); }
+  .stage-card.active-post { border: 1.5px solid var(--teal); background: var(--bg3); }
+  .snum { font-size: 10px; color: var(--text4); letter-spacing: .08em; font-family: 'Georgia', serif; }
+  .sname { font-size: 12px; color: var(--text); line-height: 1.3; margin-top: 2px; font-family: 'Georgia', serif; }
+  .ssub { font-size: 11px; color: var(--text3); margin-top: 1px; font-family: 'Georgia', serif; }
+  .sbudget { font-size: 11px; margin-top: 4px; font-family: 'Georgia', serif; }
+  .sbudget.pre { color: var(--blue); }
+  .sbudget.sale { color: var(--gold); }
+  .sbudget.post { color: var(--teal); }
+
+  /* ── WIDGET 5: WEEKLY COSTS ── */
+  .metric-row { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; margin-bottom: 16px; }
+  .mc { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+  .mc-label { font-size: 10px; color: var(--text4); letter-spacing: .05em; text-transform: uppercase; font-family: 'Georgia', serif; }
+  .mc-val { font-size: 18px; color: var(--text); margin-top: 4px; font-family: 'Georgia', serif; }
+  .mc-sub { font-size: 11px; color: var(--text3); margin-top: 2px; font-family: 'Georgia', serif; }
+  .phase-toggle { display: flex; gap: 6px; margin-bottom: 16px; }
+  .ptab {
+    padding: 5px 14px; border-radius: 20px; font-size: 12px;
+    cursor: pointer; border: 0.5px solid var(--border);
+    background: var(--bg2); color: var(--text3);
+    transition: all .15s; font-family: 'Georgia', serif;
+  }
+  .ptab:hover { color: var(--text); }
+  .ptab.on { background: var(--bg3); color: var(--text); border-color: var(--border2); }
+  .runway-bar { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+  .runway-fill { height: 100%; border-radius: 3px; background: var(--teal); transition: width .4s; }
+  .runway-fill.warn { background: var(--gold2); }
+  .runway-fill.danger { background: var(--coral); }
+
+  /* ── BUDGET CHARTS SECTION ── */
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .chart-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
+  .chart-label { font-size: 10px; color: var(--text4); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 12px; font-family: 'Georgia', serif; }
+  .legend-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); font-family: 'Georgia', serif; }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* DIVIDER */
+  .widget-divider {
+    border: none; border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  /* BUDGET BAR */
+  .budget-bar { display: grid; grid-template-columns: 2fr 7fr 5fr 3fr 2fr; gap: 4px; margin-bottom: 10px; }
+  .bseg { padding: 8px 10px; border-radius: var(--radius); background: var(--bg2); border: 0.5px solid var(--border); }
+  .bseg.sale { border-color: rgba(201,169,110,0.3); }
+  .bseg.post { border-color: rgba(29,158,117,0.3); }
+  .bseg-label { font-size: 10px; color: var(--text4); font-family: 'Georgia', serif; }
+  .bseg-val { font-size: 13px; color: var(--gold); font-family: 'Georgia', serif; }
+  .bseg-pct { font-size: 11px; color: var(--text3); font-family: 'Georgia', serif; }
+  .phase-row { display: flex; gap: 4px; margin-bottom: 8px; }
+  .phase-pill {
+    padding: 4px 10px; border-radius: var(--radius); font-size: 10px;
+    font-family: 'Georgia', serif; letter-spacing: .05em;
+  }
+  .phase-pill.pre { background: var(--info-bg); color: var(--blue); flex: 2; text-align: center; }
+  .phase-pill.sale { background: var(--warn-bg); color: var(--gold); flex: 2; text-align: center; }
+  .phase-pill.post { background: var(--success-bg); color: var(--teal); flex: 1; text-align: center; }
+
+  /* DETAIL PANEL */
+  .detail-panel { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
+  .dhead { display: flex; align-items: baseline; gap: 10px; padding-bottom: 12px; border-bottom: 0.5px solid var(--border); margin-bottom: 16px; flex-wrap: wrap; }
+  .dtitle { font-size: 16px; color: var(--text); font-family: 'Georgia', serif; }
+  .dbudget-hero { display: flex; align-items: baseline; gap: 8px; margin-bottom: 16px; padding: 10px 14px; background: var(--bg3); border-radius: var(--radius); flex-wrap: wrap; }
+  .dbudget-amt { font-size: 22px; color: var(--gold); font-family: 'Georgia', serif; }
+  .dbudget-pct { font-size: 12px; color: var(--text3); font-family: 'Georgia', serif; }
+  .dbudget-desc { font-size: 12px; color: var(--text3); margin-left: auto; max-width: 280px; text-align: right; line-height: 1.5; font-family: 'Georgia', serif; }
+  .rows2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .row-block {}
+  .row-label { font-size: 10px; color: var(--text4); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 6px; font-family: 'Georgia', serif; }
+  .row-item { font-size: 12px; color: var(--text2); line-height: 1.65; padding-left: 10px; margin-bottom: 3px; border-left: 2px solid var(--border); font-family: 'Georgia', serif; }
+  .row-item.blue { border-left-color: var(--blue); }
+  .row-item.teal { border-left-color: var(--teal); }
+  .row-item.amber { border-left-color: var(--amber); }
+  .row-item.purple { border-left-color: var(--purple); }
+  .cost-line { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--text2); padding: 4px 0; border-bottom: 0.5px solid var(--border); font-family: 'Georgia', serif; }
+  .cost-line:last-of-type { border-bottom: none; }
+  .cost-val { font-weight: 400; color: var(--text); white-space: nowrap; margin-left: 8px; }
+  .cost-total { display: flex; justify-content: space-between; font-size: 13px; color: var(--text); padding: 8px 0 0; border-top: 1px solid var(--border2); margin-top: 4px; font-family: 'Georgia', serif; }
+
+  /* SUMMARY BAR */
+  .summary-bar { display: grid; grid-template-columns: 2fr 7fr 5fr 3fr 2fr 80px; gap: 4px; margin-top: 10px; }
+  .sum-card { background: var(--bg2); border-radius: var(--radius); padding: 8px 10px; border: 0.5px solid var(--border); }
+  .sum-label { font-size: 10px; color: var(--text4); font-family: 'Georgia', serif; }
+  .sum-amt { font-size: 14px; color: var(--gold); margin-top: 1px; font-family: 'Georgia', serif; }
+  .sum-run { font-size: 11px; color: var(--text3); margin-top: 1px; font-family: 'Georgia', serif; }
+  .sum-total { background: var(--warn-bg); border: 0.5px solid rgba(201,169,110,0.3); border-radius: var(--radius); padding: 8px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .sum-total-label { font-size: 10px; color: var(--gold); font-family: 'Georgia', serif; }
+  .sum-total-val { font-size: 13px; color: var(--gold); font-family: 'Georgia', serif; }
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--bg);
+</style>
+</head>
+<body>
+
+<!-- SIDENAV -->
+<nav class="sidenav">
+  <div class="sidenav-brand">
+    <div class="name">STERLING HABIT</div>
+    <div class="sub">Cost Dashboard · MBS673</div>
+    <div class="cap">$1,000,000 AUD</div>
+  </div>
+  <div class="nav-section">Overview</div>
+  <a class="nav-item active" onclick="scrollTo('w1')"><span class="nav-num">01</span> Process map <span class="nav-amt">$1M</span></a>
+  <a class="nav-item" onclick="scrollTo('w2')"><span class="nav-num">02</span> Budget charts <span class="nav-amt">5 stages</span></a>
+  <div class="nav-section">Stage detail</div>
+  <a class="nav-item" onclick="scrollTo('w3')"><span class="nav-num">03</span> Stage 01 detail <span class="nav-amt">$50K</span></a>
+  <a class="nav-item" onclick="scrollTo('w4')"><span class="nav-num">04</span> Stage 02 detail <span class="nav-amt">$350K</span></a>
+  <a class="nav-item" onclick="scrollTo('w5')"><span class="nav-num">05</span> Stage 03 detail <span class="nav-amt">$250K</span></a>
+  <a class="nav-item" onclick="scrollTo('w6')"><span class="nav-num">06</span> Stage 04 detail <span class="nav-amt">$150K</span></a>
+  <a class="nav-item" onclick="scrollTo('w7')"><span class="nav-num">07</span> Stage 05 detail <span class="nav-amt">$100K</span></a>
+  <div class="nav-section">Costs</div>
+  <a class="nav-item" onclick="scrollTo('w8')"><span class="nav-num">08</span> Weekly operating <span class="nav-amt">all-in</span></a>
+</nav>
+
+<div class="main">
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- WIDGET 1: PROCESS MAP -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="w1">
+  <div class="section-header">
+    <span class="section-title">Process map — all five stages</span>
+    <span class="section-badge badge-pre">$1,000,000 AUD</span>
+    <span class="section-amount">Full lifecycle</span>
+  </div>
+
+  <div class="budget-bar">
+    <div class="bseg"><div class="bseg-label">Stage 01</div><div class="bseg-val">$50K</div><div class="bseg-pct">5%</div></div>
+    <div class="bseg sale"><div class="bseg-label">Stage 02</div><div class="bseg-val">$350K</div><div class="bseg-pct">35%</div></div>
+    <div class="bseg sale"><div class="bseg-label">Stage 03</div><div class="bseg-val">$250K</div><div class="bseg-pct">25%</div></div>
+    <div class="bseg"><div class="bseg-label">Stage 04</div><div class="bseg-val">$150K</div><div class="bseg-pct">15%</div></div>
+    <div class="bseg post"><div class="bseg-label">Stage 05</div><div class="bseg-val">$100K</div><div class="bseg-pct">10%</div></div>
+  </div>
+  <div class="phase-row">
+    <div class="phase-pill pre">Pre-sale</div>
+    <div class="phase-pill sale">Sale</div>
+    <div class="phase-pill post">Post-sale</div>
+  </div>
+
+  <div class="stage-grid" id="pm-stageGrid"></div>
+  <div class="detail-panel" id="pm-detail"></div>
+
+  <div style="font-size:11px;color:var(--text4);margin-bottom:8px;margin-top:16px;font-family:'Georgia',serif;">BUDGET SUMMARY</div>
+  <div class="summary-bar" id="pm-summary"></div>
+</div>
+
+<hr class="widget-divider">
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- WIDGET 2: BUDGET CHARTS -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="w2">
+  <div class="section-header">
+    <span class="section-title">Budget allocation charts</span>
+    <span class="section-badge badge-sale">$1,000,000 AUD</span>
+    <span class="section-amount">All stages</span>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-label">Budget allocation</div>
+      <div class="legend-row" id="leg1"></div>
+      <div style="position:relative;height:220px"><canvas id="donutChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-label">Fixed vs running costs by stage</div>
+      <div class="legend-row">
+        <div class="legend-item"><span class="legend-swatch" style="background:#378ADD"></span>Fixed cost midpoint</div>
+        <div class="legend-item"><span class="legend-swatch" style="background:#EF9F27"></span>Running cost/mo midpoint</div>
+      </div>
+      <div style="position:relative;height:220px"><canvas id="barChart"></canvas></div>
+    </div>
+  </div>
+  <div class="chart-card" style="margin-bottom:0">
+    <div class="chart-label">Budget allocated vs estimated fixed costs</div>
+    <div class="legend-row">
+      <div class="legend-item"><span class="legend-swatch" style="background:#1D9E75"></span>Budget allocated ($K)</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#D85A30"></span>Fixed cost midpoint ($K)</div>
+    </div>
+    <div style="position:relative;height:180px"><canvas id="compareChart"></canvas></div>
+  </div>
+</div>
+
+<hr class="widget-divider">
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- WIDGETS 3–7: DETAILED COST BREAKDOWN PER STAGE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div id="stageDetailSections"></div>
+
+<hr class="widget-divider">
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- WIDGET 8: WEEKLY OPERATING COSTS -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="w8">
+  <div class="section-header">
+    <span class="section-title">Weekly operating costs</span>
+    <span class="section-badge badge-post">All stages combined</span>
+    <span class="section-amount">Steady state</span>
+  </div>
+  <div class="note-box">All costs converted to weekly (monthly ÷ 4.33, quarterly ÷ 13). Two scenarios: <strong>lean</strong> (low-end, conservative) and <strong>full</strong> (high-end, full activity). Per-order variable costs assume 200 orders/week at steady state.</div>
+  <div class="phase-toggle">
+    <div class="ptab on" onclick="setWeeklyMode('lean',this)">Lean scenario</div>
+    <div class="ptab" onclick="setWeeklyMode('full',this)">Full scenario</div>
+  </div>
+  <div class="metric-row">
+    <div class="mc"><div class="mc-label">Total weekly burn</div><div class="mc-val" id="wm-total">—</div><div class="mc-sub">All operating costs</div></div>
+    <div class="mc"><div class="mc-label">Monthly equivalent</div><div class="mc-val" id="wm-monthly">—</div><div class="mc-sub">× 4.33 weeks</div></div>
+    <div class="mc"><div class="mc-label">Annual equivalent</div><div class="mc-val" id="wm-annual">—</div><div class="mc-sub">× 52 weeks</div></div>
+    <div class="mc"><div class="mc-label">Runway on $1M</div><div class="mc-val" id="wm-runway">—</div><div class="mc-sub" id="wm-runway-sub">—</div><div class="runway-bar"><div class="runway-fill" id="wm-bar" style="width:0%"></div></div></div>
+  </div>
+  <table class="cost-table" id="weeklyTable"></table>
+</div>
+
+</div><!-- /main -->
+
+<!-- ─────────────────── SCRIPTS ─────────────────── -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+function scrollTo(id){ document.getElementById(id).scrollIntoView({behavior:'smooth'}); updateNav(id); }
+function updateNav(id){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const map={w1:0,w2:1,w3:2,w4:3,w5:4,w6:5,w7:6,w8:7};
+  const items=document.querySelectorAll('.nav-item');
+  if(map[id]!==undefined) items[map[id]]?.classList.add('active');
+}
+
+/* ══════════════════════════════════════
+   PROCESS MAP DATA
+══════════════════════════════════════ */
+const pmStages=[
+  {num:"01",name:"Discovery & planning",sub:"Pre-launch foundation",phase:"pre",budget:"$50,000",pct:"5%",
+   budgetDesc:"Covers legal, branding, research tools, supplier engagement",
+   do_:["Register business (ABN/ACN) in WA","Conduct 5–7 interviews with WA professionals","Define JTBD and customer pain points","Select TENCEL™ supplier, negotiate MOQs","Build brand identity and tone","Develop business plan and financial model"],
+   deliver:["Consumer research report","Customer persona and empathy map","Value proposition canvas","5 Whys root cause analysis","Weighted scoring model","Business plan and financial model"],
+   resources:["Market research tools (Typeform, Miro)","Legal and accounting (ABN, ACN, trademarks)","Brand designer (freelance Perth)","Co-working space Perth CBD","Laptop and software stack","Supplier contact research"],
+   team:["Analyst (P) — market research, financial modelling","Operations Lead (T) — supplier sourcing, legal setup"],
+   fixed:[["Business registration (ASIC + ABN)","~$1,200"],["Brand identity design","~$4,000–$8,000"],["Legal/IP trademarks WA","~$2,500–$4,000"],["Research tools (annual)","~$1,500"],["Co-working space Perth 6mo","~$3,600–$6,000"]],
+   fixedTotal:"~$12,800–$19,700",running:[["Survey and Miro tools","~$50–$120/mo"],["Perth metro travel","~$200–$400 total"]],
+   runningTotal:"~$250–$520/mo",fixedSum:"~$13–$20K",runningSum:"~$250–$520/mo"},
+  {num:"02",name:"Product & platform dev",sub:"Build phase",phase:"pre",budget:"$350,000",pct:"35%",
+   budgetDesc:"Largest allocation — full production run, complete platform build, photography",
+   do_:["Source TENCEL™ fabric from Lenzing-certified supplier","Commission small-batch manufacturer (500–800 units/style)","Develop full wardrobe simulator with UX/dev team","Build Shopify e-commerce store","User test with 15–20 WA professionals","Iterate via agile sprints"],
+   deliver:["TENCEL™ garment samples (shirts, trousers, jackets)","First production run (500+ units per style)","Full wardrobe simulator (web + mobile)","AI video try-on prototype","Subscription platform with payment integration","Brand photography library"],
+   resources:["TENCEL™ fabric supplier (Lenzing certified)","Small-batch manufacturer 500–800 units","UX/UI designer (contract)","Full-stack web developer (contract)","Shopify Plus subscription","Product photographer Perth"],
+   team:["Creative Lead (B) — garment design, sampling, photography","Digital Strategist (R) — platform build, agile sprints"],
+   fixed:[["Garment sampling (3 styles × 10 samples)","~$6,000–$10,000"],["Production run 500–800 units/style","~$80,000–$140,000"],["Web dev + simulator build (full)","~$60,000–$90,000"],["Brand photography and video","~$8,000–$15,000"],["Shopify Plus setup","~$2,000–$4,000"]],
+   fixedTotal:"~$156,000–$259,000",running:[["Shopify Plus","~$299–$399/mo"],["Hosting and domain","~$50–$120/mo"],["Platform maintenance","~$1,500–$3,000/mo"],["Supplier comms","~$200–$400/mo"]],
+   runningTotal:"~$2,049–$3,919/mo",fixedSum:"~$156–$259K",runningSum:"~$2,050–$3,920/mo"},
+  {num:"03",name:"Go-to-market",sub:"Launch and acquisition",phase:"sale",budget:"$250,000",pct:"25%",
+   budgetDesc:"Funds all customer acquisition — events, paid media, influencers, PR",
+   do_:["Run paid social (Instagram, TikTok, LinkedIn) targeting WA professionals","Partner with 5–8 Perth sustainability micro-influencers","Host two Perth CBD launch events","Publish 20+ SEO articles on sustainable fashion","Build and launch Klaviyo email funnel","Submit to Australian sustainable fashion directories"],
+   deliver:["Live e-commerce store","Full paid and organic launch campaign","5–8 influencer partnerships active","SEO content library (20+ articles)","Two Perth launch events delivered","Email subscriber list (target 2,000+ at launch)"],
+   resources:["Digital marketing agency (Perth preferred)","Meta and Google Ads budget","Influencer management platform (Grin)","Two event venue hires Perth CBD","Klaviyo email marketing","PR agency or publicist (3-month retainer)"],
+   team:["Digital Strategist (R) — paid media, SEO, email, influencers","Analyst (P) — campaign analytics, ROI tracking"],
+   fixed:[["Two launch events (venue, styling, catering)","~$15,000–$25,000"],["Brand video production","~$8,000–$15,000"],["PR agency retainer 3mo","~$12,000–$20,000"],["SEO audit and initial content","~$5,000–$10,000"]],
+   fixedTotal:"~$40,000–$70,000",running:[["Meta and Google Ads","~$8,000–$15,000/mo"],["Influencer fees","~$3,000–$6,000/mo"],["Klaviyo","~$300–$600/mo"],["Content and social mgmt","~$2,000–$4,000/mo"]],
+   runningTotal:"~$13,300–$25,600/mo",fixedSum:"~$40–$70K",runningSum:"~$13–$26K/mo"},
+  {num:"04",name:"Sales and fulfilment",sub:"Revenue operations",phase:"sale",budget:"$150,000",pct:"15%",
+   budgetDesc:"Warehouse, packaging, logistics, and 6 months operating costs",
+   do_:["Process and pick/pack orders from Perth warehouse","Dispatch in compostable sustainable packaging","Activate digital wardrobe accounts at purchase","Manage returns, exchanges, customer queries","Track inventory and trigger reorders","Reconcile sales, GST, BAS for ATO compliance WA"],
+   deliver:["Fulfilled customer orders","Sustainable packaging dispatch system","Customer platform onboarding at purchase","Active subscription accounts","Inventory management system live","GST and BAS compliance maintained"],
+   resources:["Perth metro warehouse space (leased)","Compostable mailers and sustainable packaging","Part-time casual fulfilment staff (2–3)","DEAR Inventory or Cin7 software","Shopify Payments gateway","Xero with ATO BAS integration"],
+   team:["Operations Lead (T) — warehouse, logistics, fulfilment, ATO compliance"],
+   fixed:[["Warehouse setup and shelving Perth","~$5,000–$10,000"],["Initial sustainable packaging stock","~$4,000–$7,000"],["Inventory management software setup","~$1,500–$3,000"],["Xero setup and onboarding","~$1,500–$2,500"]],
+   fixedTotal:"~$12,000–$22,500",running:[["Warehouse lease Perth metro","~$2,500–$5,000/mo"],["Fulfilment staff 2–3 casual","~$3,600–$6,000/mo"],["Packaging consumables","~$600–$1,200/mo"],["AusPost shipping","~$4–$12/order"]],
+   runningTotal:"~$6,775–$12,315/mo + per-order",fixedSum:"~$12–$23K",runningSum:"~$6,800–$12,300/mo"},
+  {num:"05",name:"Retention and growth",sub:"Post-sale and scale",phase:"post",budget:"$100,000",pct:"10%",
+   budgetDesc:"Contingency buffer and growth seed — CRM, platform dev, grants, seasonal runs",
+   do_:["Send personalised outfit inspiration weekly","Manage subscription renewals and churn prevention","Collect NPS and product feedback quarterly","Plan two seasonal TENCEL capsule additions per year","Explore B2B pipeline (WA hospitality, corporate)","Apply for Aus sustainability grants (EFA, ARENA, FIAL)"],
+   deliver:["Quarterly platform feature updates","Subscription renewal campaigns","Community content and engagement program","NPS and feedback report (quarterly)","Two new seasonal product drops","Grant applications submitted"],
+   resources:["CRM stack (Klaviyo and HubSpot)","Platform dev team for ongoing sprints","Part-time customer success staff","Google Analytics 4 and Meta Pixel","Grant writer (contract)","TENCEL supplier for seasonal runs"],
+   team:["Creative Lead (B) — seasonal product design","Analyst (P) — unit economics, grants, B2B","Operations Lead (T) — supplier coordination","Digital Strategist (R) — platform updates, CRM"],
+   fixed:[["CRM setup and integration","~$2,000–$5,000"],["Annual platform feature dev","~$30,000–$50,000"],["Grant writing contracts","~$3,000–$6,000"],["B2B sales materials","~$2,000–$4,000"]],
+   fixedTotal:"~$37,000–$65,000",running:[["CRM and email tools","~$400–$800/mo"],["Customer success (part-time)","~$2,000–$3,500/mo"],["Analytics tools","~$150–$400/mo"],["Platform hosting and maintenance","~$1,550–$3,120/mo"]],
+   runningTotal:"~$4,100–$7,820/mo + quarterly product runs",fixedSum:"~$37–$65K",runningSum:"~$4,100–$7,820/mo"}
+];
+
+let pmCur=0;
+function pmPhaseClass(p){return p==='pre'?'pre':p==='sale'?'sale':'post';}
+function renderPMCards(){
+  document.getElementById('pm-stageGrid').innerHTML=pmStages.map((s,i)=>`
+    <div class="stage-card${i===0?' active-'+pmPhaseClass(s.phase):''}" id="pmc${i}" onclick="pmSelect(${i})">
+      <div class="snum">${s.num}</div><div class="sname">${s.name}</div>
+      <div class="ssub">${s.sub}</div>
+      <div class="sbudget ${pmPhaseClass(s.phase)}">${s.budget} · ${s.pct}</div>
+    </div>`).join('');
+}
+function renderPMSummary(){
+  document.getElementById('pm-summary').innerHTML=pmStages.map(s=>`
+    <div class="sum-card"><div class="sum-label">${s.num}</div>
+    <div class="sum-amt">${s.budget}</div>
+    <div class="sum-run">${s.fixedSum}</div>
+    <div class="sum-run">${s.runningSum}</div></div>`).join('')+
+    `<div class="sum-total"><div class="sum-total-label">TOTAL</div><div class="sum-total-val">$1M AUD</div><div class="sum-total-label">100%</div></div>`;
+}
+function pmSelect(i){
+  pmCur=i;
+  document.querySelectorAll('.stage-card').forEach((c,j)=>{
+    c.className='stage-card'+(j===i?' active-'+pmPhaseClass(pmStages[j].phase):'');
+  });
+  renderPMDetail(i);
+}
+function renderPMDetail(i){
+  const s=pmStages[i];
+  document.getElementById('pm-detail').innerHTML=`
+    <div class="dhead"><span class="dtitle">${s.num} — ${s.name}</span>
+    <span class="section-badge badge-${pmPhaseClass(s.phase)}">${s.phase==='pre'?'Pre-sale':s.phase==='sale'?'Sale':'Post-sale'}</span></div>
+    <div class="dbudget-hero"><span class="dbudget-amt">${s.budget}</span>
+    <span class="dbudget-pct">${s.pct} of $1,000,000 AUD</span>
+    <span class="dbudget-desc">${s.budgetDesc}</span></div>
+    <div class="rows2">
+      <div class="row-block"><div class="row-label">What we do</div>${s.do_.map(d=>`<div class="row-item blue">${d}</div>`).join('')}</div>
+      <div class="row-block"><div class="row-label">Deliverables</div>${s.deliver.map(d=>`<div class="row-item teal">${d}</div>`).join('')}</div>
+    </div>
+    <div class="rows2">
+      <div class="row-block"><div class="row-label">Resources</div>${s.resources.map(r=>`<div class="row-item amber">${r}</div>`).join('')}</div>
+      <div class="row-block"><div class="row-label">Team</div>${s.team.map(t=>`<div class="row-item purple">${t}</div>`).join('')}</div>
+    </div>
+    <div class="rows2">
+      <div class="row-block"><div class="row-label">Fixed costs (WA)</div>
+        ${s.fixed.map(([k,v])=>`<div class="cost-line"><span>${k}</span><span class="cost-val">${v}</span></div>`).join('')}
+        <div class="cost-total"><span>Fixed total</span><span>${s.fixedTotal}</span></div></div>
+      <div class="row-block"><div class="row-label">Running / operating costs</div>
+        ${s.running.map(([k,v])=>`<div class="cost-line"><span>${k}</span><span class="cost-val">${v}</span></div>`).join('')}
+        <div class="cost-total"><span>Running total</span><span>${s.runningTotal}</span></div></div>
+    </div>`;
+}
+renderPMCards(); renderPMSummary(); renderPMDetail(0);
+
+/* ══════════════════════════════════════
+   BUDGET CHARTS
+══════════════════════════════════════ */
+const chartColors=['#378ADD','#1D9E75','#EF9F27','#7F77DD','#5DCAA5'];
+const chartLabels=['S01','S02','S03','S04','S05'];
+const budgets=[50,350,250,150,100];
+const fixedMid=[16,207,55,17,51];
+const runMid=[0.4,3,19.5,9.5,6];
+
+const leg1=document.getElementById('leg1');
+['S01 5%','S02 35%','S03 25%','S04 15%','S05 10%'].forEach((l,i)=>{
+  leg1.innerHTML+=`<div class="legend-item"><span class="legend-swatch" style="background:${chartColors[i]}"></span>${l}</div>`;
+});
+
+new Chart(document.getElementById('donutChart'),{
+  type:'doughnut',
+  data:{labels:['S01 5%','S02 35%','S03 25%','S04 15%','S05 10%'],
+    datasets:[{data:budgets,backgroundColor:chartColors,borderWidth:2,borderColor:'#141414',hoverOffset:6}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:d=>' $'+d.raw+'K ('+[5,35,25,15,10][d.dataIndex]+'%)'}}},
+    layout:{padding:8}}
+});
+new Chart(document.getElementById('barChart'),{
+  type:'bar',
+  data:{labels:chartLabels,datasets:[
+    {label:'Fixed ($K)',data:fixedMid,backgroundColor:'#378ADD',borderRadius:4,barPercentage:.4},
+    {label:'Running ($/mo K)',data:runMid,backgroundColor:'#EF9F27',borderRadius:4,barPercentage:.4}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{grid:{display:false},ticks:{color:'#7a7a6e',font:{size:11}}},
+      y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7a7a6e',font:{size:11},callback:v=>'$'+v+'K'}}}}
+});
+new Chart(document.getElementById('compareChart'),{
+  type:'bar',
+  data:{labels:['Discovery','Product dev','Go-to-market','Fulfilment','Retention'],
+    datasets:[
+      {label:'Budget allocated',data:budgets,backgroundColor:'#1D9E75',borderRadius:4,barPercentage:.45},
+      {label:'Fixed cost midpoint',data:fixedMid,backgroundColor:'#D85A30',borderRadius:4,barPercentage:.45}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{grid:{display:false},ticks:{color:'#7a7a6e',font:{size:11},maxRotation:20}},
+      y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7a7a6e',font:{size:11},callback:v=>'$'+v+'K'}}}}
+});
+
+/* ══════════════════════════════════════
+   DETAILED COST BREAKDOWN DATA
+══════════════════════════════════════ */
+const detailStages=[
+{num:"01",name:"Discovery & planning",phase:"pre",budget:"$50,000",pct:"5%",
+ desc:"All pre-launch foundation work — legal, brand, research, supplier engagement",
+ sections:{
+  "What we do":{note:"All founder/team time treated as opportunity cost ($0 cash) unless outsourced.",rows:[
+    ["Register business (ABN, ACN, trademark)","ASIC company registration + IP Australia trademark","$1,200–$2,500","Once"],
+    ["Conduct 5–7 customer interviews","Recruit WA professionals; travel, café meetings","$200–$500","Once"],
+    ["Secondary market research","IBISWorld/Mintel sustainable fashion reports","$400–$900","Once"],
+    ["Define JTBD and pain points","Miro workshop facilitation tools, printed canvases","$100–$200","Once"],
+    ["Select TENCEL™ supplier","Sourcing calls, sample request fees, NDA review","$300–$600","Once"],
+    ["Negotiate MOQs with manufacturer","Travel or video calls; contract review by solicitor","$500–$1,500","Once"],
+    ["Build brand identity","Freelance brand designer Perth (logo, colour, type, guide)","$4,000–$8,000","Once"],
+    ["Develop business plan","Financial modelling + accountant review (2hr)","$400–$800","Once"],
+    ["Co-working space (6 months)","Perth CBD co-working desk x 2 people","$3,600–$6,000","Once"],
+    ["Software stack setup","G Suite, Slack, Notion, Canva Pro — annual","$600–$1,200","Once"]]},
+  "Deliverables":{note:"Cost to produce each output, including design, printing and platform tools.",rows:[
+    ["Consumer research report","Analyst time (20hrs) + Typeform Pro 3mo","$150–$300","Once"],
+    ["Customer persona document","Designer layout in Figma/Canva — 2hr freelance","$200–$400","Once"],
+    ["Empathy map canvas","Printed A1 canvases x 5 + Miro template","$50–$150","Once"],
+    ["Value proposition canvas","Miro board + facilitated session (4 team hrs)","$0–$100","Once"],
+    ["5 Whys root cause analysis","Facilitated workshop, documented in Notion","$0–$50","Once"],
+    ["Weighted scoring model","Spreadsheet build — analyst 3hrs","$0–$50","Once"],
+    ["Business plan and financial model","Accountant review + Xero setup","$400–$800","Once"],
+    ["Brand guidelines document","Included in brand identity design above","$0","Once"]]},
+  "Resources":{note:"All tools and subscriptions required during Stage 01.",rows:[
+    ["Typeform Pro","Online survey tool for customer interviews","$35–$50/mo","Monthly"],
+    ["Miro Team plan","Digital whiteboard for canvases and workshops","$16–$20/mo","Monthly"],
+    ["Notion Team","Documentation and project management","$10–$16/mo","Monthly"],
+    ["Google Workspace (4 users)","Email, Docs, Sheets, Drive","$28–$48/mo","Monthly"],
+    ["Canva Pro","Brand asset creation","$17–$22/mo","Monthly"],
+    ["IBISWorld or Mintel report","Sustainable fashion market report — one-off","$400–$900","Once"],
+    ["Co-working space Perth CBD","Hot desks x 2, 6 months","$600–$1,000/mo","Monthly"],
+    ["Business legal (solicitor)","Contract review, MOQ negotiations, trademark advice","$500–$1,500","Once"],
+    ["ASIC registration","Company registration fee","$576","Once"],
+    ["IP Australia trademark","Filing fee per class","$250–$400","Once"]]},
+  "Team":{note:"Founder time is unpaid equity contribution. External specialist fees are cash costs.",rows:[
+    ["Analyst (P) — lead","Market research, financial modelling, competitor analysis. Est. 120hrs","$0 cash / ~$7,200 value","Stage"],
+    ["Operations Lead (T) — lead","Supplier sourcing, legal coordination, business registration. Est. 80hrs","$0 cash / ~$4,800 value","Stage"],
+    ["Creative Lead (B) — support","Brand brief, style direction. Est. 30hrs","$0 cash / ~$1,800 value","Stage"],
+    ["Digital Strategist (R) — support","Tech stack setup, Miro/Notion config. Est. 20hrs","$0 cash / ~$1,200 value","Stage"],
+    ["Freelance brand designer","Logo, colour palette, typography, brand guide — Perth based","$4,000–$8,000","Once"],
+    ["Solicitor (external)","Business structure, trademarks, MOQ contract review","$500–$1,500","Once"],
+    ["Accountant (external)","Business plan review, Xero setup, tax structure advice","$400–$800","Once"]]}},
+ totals:{fixed:"$12,800–$19,700",monthly:"$706–$1,156/mo",perunit:"—"}},
+
+{num:"02",name:"Product & platform dev",phase:"pre",budget:"$350,000",pct:"35%",
+ desc:"Largest allocation — full TENCEL™ production run, complete digital platform build, photography",
+ sections:{
+  "What we do":{note:"This stage has the highest capital expenditure. Manufacturing and platform development dominate spend.",rows:[
+    ["Source TENCEL™ fabric","Fabric samples from Lenzing-certified mills; freight from Europe/Asia","$800–$2,000","Once"],
+    ["Commission garment sampling","3 styles × 10 samples each from manufacturer","$6,000–$10,000","Once"],
+    ["First production run — shirts","500–800 units, TENCEL™, ethical factory ($35–55/unit)","$17,500–$44,000","Once"],
+    ["First production run — trousers","500–800 units, TENCEL™ blend, ethical factory","$20,000–$52,000","Once"],
+    ["First production run — jackets","500–800 units, TENCEL™ ($55–90/unit)","$27,500–$72,000","Once"],
+    ["Quality inspection (third party)","Third-party QC inspection at factory before shipment","$1,500–$3,000","Once"],
+    ["Freight and import duties","Sea freight Asia→Perth + customs duty (~10% garment value)","$4,000–$12,000","Once"],
+    ["Develop wardrobe simulator","UX design + full-stack build, agile sprints over 4–5 months","$60,000–$90,000","Once"],
+    ["Build Shopify e-commerce store","Custom Shopify Plus theme + apps + payment integration","$8,000–$15,000","Once"],
+    ["User testing (15–20 participants)","Paid recruitment ($50–$80/participant) + facilitation","$750–$1,600","Once"],
+    ["Platform iteration post-testing","Dev hours for fixes and feature refinement","$5,000–$10,000","Once"],
+    ["Product photography","Perth studio, 3 styles, 2 models, full day","$5,000–$10,000","Once"],
+    ["Brand video (hero asset)","30–60 second launch video, Perth production house","$8,000–$15,000","Once"]]},
+  "Deliverables":{note:"Each deliverable has a direct production or build cost attached.",rows:[
+    ["TENCEL™ garment samples (3 styles)","Sampling fees — shirts, trousers, jackets","$6,000–$10,000","Once"],
+    ["First production run (all styles)","Total landed cost inc. freight and duties","$65,000–$180,000","Once"],
+    ["Wardrobe simulator (MVP web)","Design + development + testing","$60,000–$90,000","Once"],
+    ["AI video try-on prototype","Additional dev module on top of simulator","$8,000–$18,000","Once"],
+    ["Subscription platform","Payment integration + account management build","$5,000–$12,000","Once"],
+    ["Shopify e-commerce store","Custom build + theme + required apps","$8,000–$15,000","Once"],
+    ["Brand photography library","Studio shoot, editing, 60+ final images","$5,000–$10,000","Once"],
+    ["Launch video asset","Hero brand video, edited and delivered","$8,000–$15,000","Once"],
+    ["Miro prototype board","Digital prototype for user testing sessions","$0–$500","Once"]]},
+  "Resources":{note:"Subscriptions, tools and infrastructure needed throughout the build phase.",rows:[
+    ["Shopify Plus subscription","E-commerce platform monthly fee","$299–$399/mo","Monthly"],
+    ["Web hosting and domain","AWS or Vercel hosting + domain registration","$50–$120/mo","Monthly"],
+    ["Figma Professional","UX/UI design tool for simulator and web","$45–$75/mo","Monthly"],
+    ["GitHub / version control","Code repository for dev team","$10–$21/mo","Monthly"],
+    ["Stripe or Shopify Payments","Payment gateway — transaction fee ongoing","$0 setup / 1.75%","Per unit"],
+    ["Xero accounting","Bookkeeping, inventory tracking, BAS prep","$75–$115/mo","Monthly"],
+    ["DEAR Inventory or Cin7","Inventory management system — setup and onboarding","$1,500–$3,000 setup","Once"],
+    ["Lenzing TENCEL™ fabric","Certified sustainable fibre — per metre cost","$8–$18/metre","Per unit"],
+    ["Ethical manufacturer","CMT (cut-make-trim) cost per garment","$25–$65/unit","Per unit"],
+    ["QC inspection service (QIMA/SGS)","Third-party factory inspection","$300–$500/day","Once"]]},
+  "Team":{note:"This stage requires significant external contractor spend alongside founder time.",rows:[
+    ["Creative Lead (B) — lead","Garment design direction, sampling brief, photography, 200hrs","$0 cash / ~$12,000 value","Stage"],
+    ["Digital Strategist (R) — lead","Platform architecture, developer briefing, agile sprint mgmt, 300hrs","$0 cash / ~$18,000 value","Stage"],
+    ["Operations Lead (T) — lead","Manufacturer coordination, freight, QC, import duties, 150hrs","$0 cash / ~$9,000 value","Stage"],
+    ["Analyst (P) — support","Budget tracking, unit economics modelling, 60hrs","$0 cash / ~$3,600 value","Stage"],
+    ["UX/UI designer (contract)","Wardrobe simulator UX, wireframes, prototype — 6–8 weeks","$12,000–$20,000","Once"],
+    ["Full-stack developer (contract)","Simulator + Shopify build — 3–5 months","$40,000–$65,000","Once"],
+    ["Garment manufacturer","Production labour included in per-unit cost above","Included above","Once"],
+    ["Product photographer (Perth)","Full-day studio shoot, 2 models, 3 styles","$3,000–$6,000","Once"],
+    ["Videographer (Perth)","Hero brand video production","$5,000–$10,000","Once"]]}},
+ totals:{fixed:"$156,000–$259,000",monthly:"$479–$730/mo",perunit:"$25–$65/unit + 1.75% txn"}},
+
+{num:"03",name:"Go-to-market",phase:"sale",budget:"$250,000",pct:"25%",
+ desc:"Customer acquisition — paid media, influencers, events, PR, SEO",
+ sections:{
+  "What we do":{note:"Marketing spend is the highest ongoing cash burn. $250K funds approximately 6–9 months of full acquisition.",rows:[
+    ["Set up Meta Ads account and pixel","Technical setup, pixel install on Shopify, audience building","$500–$1,500","Once"],
+    ["Run Instagram paid campaigns","Photo/video ads targeting WA professionals 25–40","$3,000–$6,000/mo","Monthly"],
+    ["Run TikTok paid campaigns","Short-form video ads, capsule wardrobe content","$1,000–$3,000/mo","Monthly"],
+    ["Run LinkedIn paid campaigns","Targeting WA working professionals by industry","$1,000–$3,000/mo","Monthly"],
+    ["Run Google Search ads","Branded + sustainable fashion keywords, WA geo","$1,000–$2,000/mo","Monthly"],
+    ["Soft launch event Perth","Invite-only trade/press preview, Perth CBD venue","$5,000–$10,000","Once"],
+    ["Public launch event Perth","Consumer-facing launch, styling showcase, live demos","$10,000–$15,000","Once"],
+    ["Influencer outreach and briefing","Identify, contract, brief 5–8 Perth micro-influencers","$500–$1,000","Once"],
+    ["Influencer ongoing fees","Flat fee or gifting per post/story/reel","$1,500–$4,000/mo","Monthly"],
+    ["PR agency retainer","National sustainable fashion press outreach, pitching","$4,000–$7,000/mo","Monthly"],
+    ["Publish SEO blog content","20+ articles on capsule wardrobes, TENCEL™","$2,000–$5,000","Once"],
+    ["Email marketing setup","Klaviyo flows — welcome, abandon cart, post-purchase","$500–$1,500","Once"],
+    ["Email ongoing campaigns","Monthly newsletters, product drops, styling tips","$150–$400/mo","Monthly"]]},
+  "Deliverables":{note:"Each deliverable has a production or placement cost.",rows:[
+    ["Live e-commerce store","Shopify store — ongoing fee","$299–$399/mo","Monthly"],
+    ["Launch campaign creative assets","Photo + video ads, static banners — 10–15 assets","$3,000–$6,000","Once"],
+    ["Soft launch event delivered","Venue, catering, styling, invitations","$5,000–$10,000","Once"],
+    ["Public launch event delivered","Venue, catering, AV, styling, photographer","$10,000–$15,000","Once"],
+    ["5–8 influencer partnerships","Contracted posts, stories, reels — per influencer","$300–$1,000/influencer","Once"],
+    ["SEO content library (20+ articles)","Freelance content writer + SEO tool subscription","$2,000–$5,000","Once"],
+    ["Press coverage (PR)","PR agency monthly retainer for placements","$4,000–$7,000/mo","Monthly"],
+    ["Email subscriber list (2,000+ target)","Klaviyo setup + lead magnet design","$500–$1,500","Once"],
+    ["Media kit and brand deck","Design by Creative Lead + print","$500–$1,200","Once"]]},
+  "Resources":{note:"Platforms, tools and agencies powering the launch.",rows:[
+    ["Meta Business Suite / Ads Manager","Paid media platform — ad spend only","Ad spend only","Monthly"],
+    ["Google Ads","Search and display — pay per click","Ad spend only","Monthly"],
+    ["TikTok Ads Manager","Short-form paid video","Ad spend only","Monthly"],
+    ["Klaviyo (email marketing)","Up to 10K contacts tier","$150–$400/mo","Monthly"],
+    ["Grin (influencer platform)","Influencer discovery, contracts, tracking","$300–$600/mo","Monthly"],
+    ["SEMrush or Ahrefs","SEO keyword research and content planning","$120–$200/mo","Monthly"],
+    ["PR agency (Perth or national)","Retainer for media outreach and press placements","$4,000–$7,000/mo","Monthly"],
+    ["Event venue hire (Perth CBD)","Per event — includes AV basic setup","$1,500–$4,000","Once"],
+    ["Event photographer/videographer","Content capture at both launch events","$800–$1,500","Once"],
+    ["Freelance content writer","SEO blog articles — per article","$150–$300/article","Per unit"]]},
+  "Team":{note:"Marketing is led by Digital Strategist and Analyst. PR agency is a significant external cost.",rows:[
+    ["Digital Strategist (R) — lead","Paid media, email funnels, SEO oversight, influencers, 250hrs","$0 cash / ~$15,000 value","Stage"],
+    ["Analyst (P) — lead","Campaign analytics, ROI tracking, A/B test analysis, 150hrs","$0 cash / ~$9,000 value","Stage"],
+    ["Creative Lead (B) — support","Ad creative direction, event styling, media kit, 80hrs","$0 cash / ~$4,800 value","Stage"],
+    ["Operations Lead (T) — support","Event logistics, vendor coordination, 40hrs","$0 cash / ~$2,400 value","Stage"],
+    ["PR agency (external)","Ongoing retainer for press placements and media relations","$4,000–$7,000/mo","Monthly"],
+    ["Freelance content writer","SEO blog articles (20+)","$3,000–$6,000","Once"],
+    ["Event stylist (external)","Styling for both launch events","$800–$2,000","Once"],
+    ["Event photographer (external)","Content capture at both events","$800–$1,500","Once"]]}},
+ totals:{fixed:"$40,000–$70,000",monthly:"$13,300–$25,600/mo",perunit:"$150–$300/article"}},
+
+{num:"04",name:"Sales and fulfilment",phase:"sale",budget:"$150,000",pct:"15%",
+ desc:"Perth warehouse, sustainable packaging, order fulfilment, ATO compliance",
+ sections:{
+  "What we do":{note:"Fulfilment costs include both setup (fixed) and per-order variable costs. AusPost rates estimated for standard parcels within Australia.",rows:[
+    ["Set up Perth metro warehouse","Lease deposit (2 months), fit-out, shelving, labelling system","$5,000–$10,000","Once"],
+    ["Install inventory management software","DEAR/Cin7 — setup, data import, training","$1,500–$3,000","Once"],
+    ["Set up sustainable packaging","Bulk compostable mailers, tissue paper, branded stickers","$4,000–$7,000","Once"],
+    ["Configure Shopify fulfilment flow","Order routing, pick/pack workflow, tracking email automation","$800–$2,000","Once"],
+    ["Onboard AusPost business account","Business parcel contract, rate negotiation, label integration","$0–$200","Once"],
+    ["Set up Xero + ATO BAS integration","Xero subscription, GST setup, quarterly BAS lodgement","$1,500–$2,500","Once"],
+    ["Process and pack orders","Labour cost per order — casual staff pick/pack/dispatch","$2–$4/order","Per unit"],
+    ["Dispatch via AusPost","Standard parcel within Australia (estimated avg weight 400g)","$9–$14/order","Per unit"],
+    ["Activate customer wardrobe account","Automated via Shopify + platform integration","$0/order","Per unit"],
+    ["Manage returns and exchanges","Staff time + return postage label","$4–$8/return","Per unit"],
+    ["Reconcile GST and lodge BAS","Xero + accountant — quarterly BAS lodgement","$300–$600/quarter","Quarterly"],
+    ["Reorder stock at buffer threshold","Purchase order + freight deposit on reorder","$1,500–$3,000/run","Per unit"]]},
+  "Deliverables":{note:"Operational systems and outputs delivered during this stage.",rows:[
+    ["Warehouse operational (Perth metro)","Fitted, shelved, labelled and staffed","$5,000–$10,000","Once"],
+    ["Sustainable packaging system","Bulk compostable mailers, tissue, stickers — initial stock","$4,000–$7,000","Once"],
+    ["Inventory management system live","DEAR or Cin7 configured, integrated with Shopify","$1,500–$3,000","Once"],
+    ["Shopify fulfilment automation","Order routing, tracking emails, returns portal","$800–$2,000","Once"],
+    ["Xero + BAS compliance system","Live accounting, GST tracking, quarterly BAS","$1,500–$2,500","Once"],
+    ["Customer platform onboarding","Automated at checkout — no marginal cost","$0","Once"],
+    ["Fulfilled order (per unit)","Total variable cost per dispatched order","$11–$18/order","Per unit"],
+    ["Returns processing (per unit)","Return assessment, restock or dispose","$4–$8/return","Per unit"]]},
+  "Resources":{note:"All tools, space and consumables required to run fulfilment operations.",rows:[
+    ["Perth metro warehouse lease","Light industrial unit, ~80–120sqm, incl. outgoings","$2,500–$5,000/mo","Monthly"],
+    ["DEAR Inventory / Cin7","Inventory and order management SaaS","$300–$700/mo","Monthly"],
+    ["Xero accounting","GST, BAS, payroll, bank feeds — Standard plan","$75–$115/mo","Monthly"],
+    ["Shopify Payments","Transaction processing — 1.75% per transaction","1.75%/txn","Per unit"],
+    ["AusPost business account","Business parcel delivery avg $9–$14/parcel","$9–$14/order","Per unit"],
+    ["Compostable mailers (ongoing)","Noissue or Hero Packaging — per unit restocking","$0.80–$1.50/unit","Per unit"],
+    ["Packaging tissue and stickers","Branded tissue paper and branded sticker rolls","$0.30–$0.60/order","Per unit"],
+    ["Casual fulfilment staff (2–3)","WA award wage ~$25–$28/hr casual × 20–30hrs/wk","$2,000–$3,360/wk","Monthly"],
+    ["Forklift / pallet jack hire","Monthly rental if pallet deliveries required","$200–$500/mo","Monthly"],
+    ["Poly bags and garment wrap","Individual garment protection inside mailer","$0.20–$0.40/unit","Per unit"]]},
+  "Team":{note:"Fulfilment is owned by Operations Lead. Casual staff are the main cash cost in this stage.",rows:[
+    ["Operations Lead (T) — lead","Warehouse management, supplier reorders, staff rostering, ATO BAS, logistics. Est. 200hrs/mo","$0 cash / ~$12,000/mo value","Monthly"],
+    ["Casual fulfilment staff × 2","Pick, pack, dispatch, returns — WA casual award ~$25–$28/hr","$2,000–$3,360/wk","Monthly"],
+    ["Casual fulfilment staff × 1 (peak)","Additional staff during launch and peak periods","$1,000–$1,120/wk","Monthly"],
+    ["Accountant (external, quarterly)","BAS lodgement review, tax planning","$300–$600/quarter","Quarterly"],
+    ["Warehouse cleaner (casual)","Weekly warehouse clean — 2hrs","$50–$60/wk","Monthly"]]}},
+ totals:{fixed:"$12,000–$22,500",monthly:"$5,475–$9,875/mo",perunit:"$11–$18/order dispatched"}},
+
+{num:"05",name:"Retention and growth",phase:"post",budget:"$100,000",pct:"10%",
+ desc:"Contingency buffer + growth seed — CRM, platform dev retainer, seasonal runs, grants",
+ sections:{
+  "What we do":{note:"The $100K functions as both a safety buffer (~$30K) and a growth engine for Year 1 post-launch activities.",rows:[
+    ["Send weekly outfit inspiration","Klaviyo automated email flow — no marginal cost per send","$0/send","Per unit"],
+    ["Manage subscription renewals","Automated via Shopify + Klaviyo — staff oversight only","$0–$200/mo","Monthly"],
+    ["Collect NPS quarterly","Typeform survey to customer base — quarterly","$0–$50/quarter","Quarterly"],
+    ["Plan and source seasonal capsule drops","Sourcing new TENCEL™ styles, sampling, production brief","$15,000–$28,000/run","Per unit"],
+    ["Develop new platform features quarterly","Dev sprint — 2 weeks per quarter, contracted developer","$6,000–$12,000/quarter","Quarterly"],
+    ["Build B2B pipeline (corporate gifting)","Sales deck, outreach, meetings — WA hospitality and corporate","$1,000–$3,000","Once"],
+    ["Apply for sustainability grants","EFA, ARENA, FIAL grant applications — writer + filing fees","$2,000–$4,000/application","Once"],
+    ["Optimise CAC and LTV monthly","Analytics review, ad spend reallocation, pricing adjustments","$0–$500/mo","Monthly"],
+    ["Community engagement","Instagram/TikTok organic content, replies, UGC reposting","$500–$1,500/mo","Monthly"]]},
+  "Deliverables":{note:"Outputs produced and maintained during the retention and growth phase.",rows:[
+    ["Quarterly platform feature update","New features shipped per quarter — dev cost below","$6,000–$12,000/quarter","Quarterly"],
+    ["Subscription renewal campaign","Klaviyo email sequence — design + copywriting per campaign","$300–$800/campaign","Per unit"],
+    ["NPS report (quarterly)","Typeform + analyst summary — team time only","$0–$100/quarter","Quarterly"],
+    ["Seasonal product drop (2 per year)","New TENCEL™ style — sampling + production + freight","$15,000–$28,000/run","Per unit"],
+    ["B2B pitch deck and lookbook","Creative Lead design — 2 days work","$500–$1,200","Once"],
+    ["Grant application (per submission)","Writer fee + filing + supporting evidence pack","$2,000–$4,000/application","Once"],
+    ["Monthly unit economics dashboard","Analyst-built Looker Studio or Sheets dashboard","$0–$200","Once"],
+    ["Community content (monthly)","Organic Instagram and TikTok — team time + tools","$500–$1,500/mo","Monthly"]]},
+  "Resources":{note:"Ongoing platform and CRM tools that power retention.",rows:[
+    ["Klaviyo (CRM + email)","Based on list size — 10K+ contacts tier","$150–$400/mo","Monthly"],
+    ["HubSpot Starter (CRM)","Contact management, B2B pipeline tracking","$20–$50/mo","Monthly"],
+    ["Google Analytics 4","Free — website analytics, conversion tracking","$0","Monthly"],
+    ["Meta Pixel","Free — retargeting data, ad optimisation","$0","Monthly"],
+    ["Shopify analytics","Included in Shopify Plus subscription","Included","Monthly"],
+    ["Looker Studio","Free BI dashboard for unit economics","$0","Monthly"],
+    ["Typeform Pro","Ongoing NPS surveys","$35–$50/mo","Monthly"],
+    ["AWS or Vercel hosting","Platform infrastructure — scales with users","$80–$200/mo","Monthly"],
+    ["Platform developer (retainer)","Contracted dev — quarterly feature sprints","$6,000–$12,000/quarter","Quarterly"],
+    ["Grant writing (contract)","Per application — sustainability grant writer","$2,000–$4,000/application","Once"],
+    ["TENCEL™ supplier (new seasonal)","Fabric for new drops — per metre","$8–$18/metre","Per unit"]]},
+  "Team":{note:"All four team members contribute. External costs are developer retainer and grant writer.",rows:[
+    ["Creative Lead (B) — seasonal drops","New style design, sampling brief, lookbook, B2B materials. Est. 60hrs/quarter","$0 cash / ~$3,600/quarter value","Quarterly"],
+    ["Analyst (P) — growth analytics","Unit economics, CAC/LTV optimisation, grant research, B2B. Est. 80hrs/quarter","$0 cash / ~$4,800/quarter value","Quarterly"],
+    ["Operations Lead (T) — supplier runs","New seasonal sourcing, manufacturer coordination, freight. Est. 60hrs/quarter","$0 cash / ~$3,600/quarter value","Quarterly"],
+    ["Digital Strategist (R) — platform and CRM","Klaviyo campaigns, platform sprint management, analytics. Est. 100hrs/quarter","$0 cash / ~$6,000/quarter value","Quarterly"],
+    ["Platform developer (contract)","Quarterly feature sprint — 2 weeks per quarter","$6,000–$12,000/quarter","Quarterly"],
+    ["Grant writer (contract)","Per grant application submitted","$2,000–$4,000/application","Once"],
+    ["Customer success (part-time casual)","1 person, 15–20hrs/wk — subscription queries, returns, community","$1,500–$2,240/wk","Monthly"]]}},
+ totals:{fixed:"$37,000–$65,000",monthly:"$4,100–$7,820/mo",perunit:"$15,000–$28,000/seasonal run"}}
+];
+
+const sectionOrder=["What we do","Deliverables","Resources","Team"];
+const badgeMap={"Once":"once","Monthly":"monthly","Per unit":"perunit","Per txn":"perunit","Weekly":"weekly","Quarterly":"quarterly","Stage":"stage"};
+const accentColors={"What we do":"var(--blue)","Deliverables":"var(--teal)","Resources":"var(--amber)","Team":"var(--purple)"};
+let detailCurSection={};
+
+function buildDetailSections(){
+  const container=document.getElementById('stageDetailSections');
+  const sectionIds=['w3','w4','w5','w6','w7'];
+  const phaseLabel={pre:'Pre-sale',sale:'Sale',post:'Post-sale'};
+  const phaseBadge={pre:'badge-pre',sale:'badge-sale',post:'badge-post'};
+
+  detailStages.forEach((s,si)=>{
+    detailCurSection[si]=0;
+    const id=sectionIds[si];
+    const div=document.createElement('div');
+    div.className='section'; div.id=id;
+
+    let html=`<div class="section-header">
+      <span class="section-title">${s.num} — ${s.name}</span>
+      <span class="section-badge ${phaseBadge[s.phase]}">${phaseLabel[s.phase]}</span>
+      <span class="section-amount">${s.budget} · ${s.pct}</span>
+    </div>
+    <div class="hero-bar">
+      <div class="hc"><div class="hc-label">Budget</div><div class="hc-val">${s.budget}</div><div class="hc-sub">${s.pct} of $1M</div></div>
+      <div class="hc"><div class="hc-label">Fixed costs</div><div class="hc-val">${s.totals.fixed}</div><div class="hc-sub">One-off capital</div></div>
+      <div class="hc"><div class="hc-label">Monthly running</div><div class="hc-val">${s.totals.monthly}</div><div class="hc-sub">Ongoing burn</div></div>
+      <div class="hc"><div class="hc-label">Variable</div><div class="hc-val">${s.totals.perunit}</div><div class="hc-sub">Scales with volume</div></div>
+    </div>
+    <div class="inner-tabs" id="itabs${si}"></div>
+    <div id="ipanels${si}"></div>
+    <hr class="widget-divider" style="margin:40px 0">`;
+
+    div.innerHTML=html;
+    container.appendChild(div);
+
+    sectionOrder.forEach((sec,ti)=>{
+      const tab=document.createElement('div');
+      tab.className='itab'+(ti===0?' on':'');
+      tab.textContent=sec;
+      tab.onclick=()=>switchDetailTab(si,ti);
+      document.getElementById(`itabs${si}`).appendChild(tab);
+    });
+    renderDetailPanel(si,0);
+  });
+}
+
+function switchDetailTab(si,ti){
+  detailCurSection[si]=ti;
+  document.querySelectorAll(`#itabs${si} .itab`).forEach((t,j)=>t.classList.toggle('on',j===ti));
+  renderDetailPanel(si,ti);
+}
+
+function renderDetailPanel(si,ti){
+  const s=detailStages[si];
+  const sec=sectionOrder[ti];
+  const data=s.sections[sec];
+  const accent=accentColors[sec];
+  let html=`<div class="note-box">${data.note}</div>
+  <table class="cost-table">
+    <thead><tr>
+      <th style="width:30%">${sec==='Team'?'Team member':sec==='Resources'?'Resource':'Task / item'}</th>
+      <th style="width:34%">Description</th>
+      <th class="r" style="width:20%">Estimated cost</th>
+      <th style="width:16%">Type</th>
+    </tr></thead><tbody>`;
+  data.rows.forEach(([task,desc,cost,type])=>{
+    const bk=badgeMap[type]||'once';
+    const costClass=cost.includes('$0')?'lo':cost.includes('/mo')||cost.includes('/wk')?'med':'';
+    html+=`<tr>
+      <td class="task-cell" style="border-left:2px solid ${accent};padding-left:12px">${task}</td>
+      <td class="note-cell">${desc}</td>
+      <td class="cost-cell ${costClass}">${cost}</td>
+      <td><span class="tbadge ${bk}">${type}</span></td>
+    </tr>`;
+  });
+  html+=`</tbody></table>
+  <div class="totals-row">
+    <div class="tot-card"><div class="tot-label">Fixed / one-off total</div><div class="tot-val">${s.totals.fixed}</div><div class="tot-sub">Capital expenditure</div></div>
+    <div class="tot-card"><div class="tot-label">Monthly operating</div><div class="tot-val">${s.totals.monthly}</div><div class="tot-sub">Ongoing burn rate</div></div>
+    <div class="tot-card"><div class="tot-label">Variable / per-unit</div><div class="tot-val">${s.totals.perunit}</div><div class="tot-sub">Scales with volume</div></div>
+  </div>`;
+  document.getElementById(`ipanels${si}`).innerHTML=html;
+}
+buildDetailSections();
+
+/* ══════════════════════════════════════
+   WEEKLY OPERATING COSTS
+══════════════════════════════════════ */
+const weeklyCats=[
+  {cat:"Staffing and labour",items:[
+    {name:"Casual fulfilment staff (2–3 WA award rate)",note:"~$25–28/hr casual × 25–35hrs/wk",lean:1250,full:2352,type:"variable"},
+    {name:"Customer success (part-time casual)",note:"15–20hrs/wk × $25/hr WA casual",lean:375,full:500,type:"variable"},
+    {name:"Warehouse cleaner (casual)",note:"2hrs/wk",lean:50,full:60,type:"fixed"},
+    {name:"Accountant / BAS (amortised weekly)",note:"$300–600/quarter ÷ 13 weeks",lean:23,full:46,type:"fixed"},
+    {name:"PR agency retainer (amortised weekly)",note:"$4,000–7,000/mo ÷ 4.33",lean:924,full:1616,type:"fixed"},
+    {name:"Freelance content writer (amortised)",note:"$3,000–6,000 over 3mo ÷ 13 wks",lean:231,full:461,type:"variable"}]},
+  {cat:"Digital platform and technology",items:[
+    {name:"Shopify Plus subscription",note:"$299–399/mo ÷ 4.33",lean:69,full:92,type:"fixed"},
+    {name:"Web hosting (AWS / Vercel)",note:"$50–120/mo ÷ 4.33",lean:12,full:28,type:"fixed"},
+    {name:"Klaviyo email / CRM",note:"$150–400/mo ÷ 4.33",lean:35,full:92,type:"fixed"},
+    {name:"HubSpot Starter CRM",note:"$20–50/mo ÷ 4.33",lean:5,full:12,type:"fixed"},
+    {name:"DEAR Inventory / Cin7",note:"$300–700/mo ÷ 4.33",lean:69,full:162,type:"fixed"},
+    {name:"Xero accounting",note:"$75–115/mo ÷ 4.33",lean:17,full:27,type:"fixed"},
+    {name:"Platform developer retainer (amortised)",note:"$6,000–12,000/quarter ÷ 13 wks",lean:461,full:923,type:"variable"},
+    {name:"Figma Professional",note:"$45–75/mo ÷ 4.33",lean:10,full:17,type:"fixed"},
+    {name:"SEMrush / Ahrefs SEO tool",note:"$120–200/mo ÷ 4.33",lean:28,full:46,type:"fixed"},
+    {name:"Google Workspace (4 users)",note:"$28–48/mo ÷ 4.33",lean:6,full:11,type:"fixed"},
+    {name:"Miro / Notion / Typeform",note:"$61–86/mo combined ÷ 4.33",lean:14,full:20,type:"fixed"}]},
+  {cat:"Marketing and paid media",items:[
+    {name:"Instagram / Meta paid ads",note:"$3,000–6,000/mo ÷ 4.33",lean:693,full:1386,type:"variable"},
+    {name:"TikTok paid ads",note:"$1,000–3,000/mo ÷ 4.33",lean:231,full:693,type:"variable"},
+    {name:"LinkedIn paid ads",note:"$1,000–3,000/mo ÷ 4.33",lean:231,full:693,type:"variable"},
+    {name:"Google Search ads",note:"$1,000–2,000/mo ÷ 4.33",lean:231,full:462,type:"variable"},
+    {name:"Influencer fees (ongoing)",note:"$1,500–4,000/mo ÷ 4.33",lean:347,full:924,type:"variable"},
+    {name:"Grin influencer platform",note:"$300–600/mo ÷ 4.33",lean:69,full:139,type:"fixed"},
+    {name:"Community content creation",note:"$500–1,500/mo ÷ 4.33",lean:115,full:346,type:"variable"}]},
+  {cat:"Warehouse and fulfilment",items:[
+    {name:"Perth metro warehouse lease",note:"$2,500–5,000/mo ÷ 4.33",lean:578,full:1155,type:"fixed"},
+    {name:"Compostable mailers and packaging",note:"$0.80–1.50/unit × 200 orders/wk",lean:160,full:300,type:"variable"},
+    {name:"Tissue paper and branded stickers",note:"$0.30–0.60/order × 200 orders/wk",lean:60,full:120,type:"variable"},
+    {name:"AusPost shipping (200 orders/wk)",note:"$9–14/order × 200 orders",lean:1800,full:2800,type:"variable"},
+    {name:"Shopify Payments transaction fee",note:"1.75% of GMV — $150 avg order × 200/wk",lean:525,full:525,type:"variable"},
+    {name:"Returns processing (est. 5% return rate)",note:"$4–8/return × 10 returns/wk",lean:40,full:80,type:"variable"},
+    {name:"Forklift / pallet jack hire",note:"$200–500/mo ÷ 4.33",lean:46,full:115,type:"fixed"},
+    {name:"Poly bags and garment wrap",note:"$0.20–0.40/unit × 200 orders/wk",lean:40,full:80,type:"variable"}]},
+  {cat:"Operational and admin",items:[
+    {name:"Co-working space / office",note:"$600–1,000/mo ÷ 4.33",lean:139,full:231,type:"fixed"},
+    {name:"Canva Pro",note:"$17–22/mo ÷ 4.33",lean:4,full:5,type:"fixed"},
+    {name:"Miscellaneous consumables",note:"Printer ink, stationery, tape, labels",lean:30,full:60,type:"variable"},
+    {name:"Business insurance (amortised weekly)",note:"Est. $2,400–4,800/yr ÷ 52",lean:46,full:92,type:"fixed"},
+    {name:"Bank fees",note:"Business account fees, international payments",lean:15,full:30,type:"fixed"},
+    {name:"Subscriptions / software (misc)",note:"Any unlisted SaaS tools",lean:20,full:50,type:"fixed"}]}
+];
+
+let weeklyMode='lean';
+function setWeeklyMode(m,el){
+  weeklyMode=m;
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  renderWeekly();
+}
+function fmt(n){return '$'+Math.round(n).toLocaleString();}
+function renderWeekly(){
+  const key=weeklyMode;
+  const allItems=weeklyCats.flatMap(c=>c.items.filter(i=>i[key]>0));
+  const total=allItems.reduce((s,i)=>s+i[key],0);
+  let html='<thead><tr><th style="width:32%">Cost item</th><th style="width:30%">Notes</th><th class="r" style="width:16%">Weekly cost</th><th style="width:12%">Type</th><th class="r" style="width:10%">% of total</th></tr></thead><tbody>';
+  weeklyCats.forEach(c=>{
+    const catItems=c.items.filter(i=>i[key]>0);
+    const catTotal=catItems.reduce((s,i)=>s+i[key],0);
+    html+=`<tr class="cat-header-row"><td colspan="4">${c.cat}</td><td class="r" style="font-size:11px;color:var(--text3);font-family:'Georgia',serif">${fmt(catTotal)}/wk</td></tr>`;
+    catItems.forEach(item=>{
+      const val=item[key];
+      const pct=total>0?((val/total)*100).toFixed(1):0;
+      const cls=val>800?'hi':val>300?'med':'lo';
+      html+=`<tr>
+        <td class="task-cell" style="padding-left:20px">${item.name}</td>
+        <td class="note-cell">${item.note}</td>
+        <td class="cost-cell ${cls}">${fmt(val)}</td>
+        <td><span class="tbadge ${item.type==='fixed'?'once':'monthly'}">${item.type}</span></td>
+        <td class="cost-cell" style="color:var(--text4)">${pct}%</td>
+      </tr>`;
+    });
+  });
+  html+=`<tr class="total-line"><td colspan="2">Total weekly operating costs</td><td class="cost-cell">${fmt(total)}</td><td colspan="2"></td></tr></tbody>`;
+  document.getElementById('weeklyTable').innerHTML=html;
+
+  const monthly=Math.round(total*4.33);
+  const annual=Math.round(total*52);
+  const weeksRunway=Math.round(1000000/total);
+  const monthsRunway=(weeksRunway/4.33).toFixed(1);
+  const pct=Math.min(100,Math.round((weeksRunway/104)*100));
+  document.getElementById('wm-total').textContent=fmt(total)+'/wk';
+  document.getElementById('wm-monthly').textContent=fmt(monthly)+'/mo';
+  document.getElementById('wm-annual').textContent=fmt(annual)+'/yr';
+  document.getElementById('wm-runway').textContent=weeksRunway+' weeks';
+  document.getElementById('wm-runway-sub').textContent=monthsRunway+' months on $1M';
+  const bar=document.getElementById('wm-bar');
+  bar.style.width=pct+'%';
+  bar.className='runway-fill'+(weeksRunway<26?' danger':weeksRunway<52?' warn':'');
+}
+renderWeekly();
+</script>
+</body>
+</html>
